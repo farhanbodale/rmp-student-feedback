@@ -129,7 +129,7 @@ th{background:#e8eef6}
 <img src="logo.png" alt="College Logo">
 <h2>Rajendra Mane Polytechnic, Ambav</h2>
 <h3>Department of Computer Engineering</h3>
-<p>Academic Year 2025 &#45; 26</p>
+<p>Academic Year 2025 - 26</p>
 </header>
 
 <div class="container">
@@ -188,10 +188,8 @@ th{background:#e8eef6}
 
 <!-- REPORT -->
 <div class="card" id="printSection">
-<h2 style="text-align:center">Rajendra Mane Polytechnic, Ambav</h2>
-<h3 style="text-align:center">Department of Computer Engineering</h3>
-<h3 style="text-align:center">Faculty Feedback Report</h3>
-<h5 style="text-align:center">Academic Year 2025 &#45; 26</h5>
+<h2 style="text-align:center">Rajendra Mane Polytechnic,Ambav<br>Computer Engineering Department<br>Faculty Feedback Report</h2>
+<h3 style="text-align:center">Academic Year 2025 - 26</h3>
 <table id="reportTable"></table>
 </div>
 
@@ -261,6 +259,7 @@ else alert("Invalid Login");
 
 function logout(){location.reload();}
 
+/* ADMIN FUNCTIONS */
 function addStudent(){
 students.push({enroll:sEnroll.value,name:sName.value,year:sYear.value});
 localStorage.setItem("students",JSON.stringify(students));
@@ -281,6 +280,7 @@ localStorage.setItem("faculties",JSON.stringify(faculties));
 alert("Faculty Added");
 }
 
+/* STUDENT FUNCTIONS */
 function loadFaculties(){
 facultySelect.innerHTML="";
 let list = faculties.filter(f=>f.year===loggedStudent.year);
@@ -308,18 +308,45 @@ ratingsArea.innerHTML+=html;
 });
 }
 
+/* ? DUPLICATE PREVENTION LOGIC */
 function submitFeedback(){
-let record={faculty:facultySelect.value,subject:subjectSelect.value};
-for(let p of parameters){
-let r=document.querySelector(`input[name="${p.key}"]:checked`);
-if(!r){alert("Please rate all parameters");return;}
-record[p.key]=Number(r.value);
+
+let subject = subjectSelect.value;
+
+// Check if feedback already submitted
+let exists = feedbackData.find(f =>
+    f.student === loggedStudent.enroll &&
+    f.subject === subject &&
+    f.year === loggedStudent.year
+);
+
+if(exists){
+    alert("You have already submitted feedback for this subject.");
+    return;
 }
+
+let record={
+    student: loggedStudent.enroll,
+    year: loggedStudent.year,
+    faculty: facultySelect.value,
+    subject: subject
+};
+
+for(let p of parameters){
+    let r=document.querySelector(`input[name="${p.key}"]:checked`);
+    if(!r){
+        alert("Please rate all parameters");
+        return;
+    }
+    record[p.key]=Number(r.value);
+}
+
 feedbackData.push(record);
 localStorage.setItem("feedbackData",JSON.stringify(feedbackData));
 alert("Feedback Submitted Successfully");
 }
 
+/* REPORT */
 function generateReport(){
 reportTable.innerHTML="<tr><th>Faculty</th><th>Subject</th>"+
 parameters.map(p=>`<th>${p.label}</th>`).join("")+
