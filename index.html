@@ -8,7 +8,7 @@
 *{box-sizing:border-box}
 body{
     font-family:Segoe UI, Arial;
-    background:#f2f5f9;
+    background:#eef2f6;
     margin:0;
 }
 
@@ -18,6 +18,14 @@ header{
     color:white;
     padding:15px;
     text-align:center;
+}
+header img{
+    width:100px;
+    height:100px;
+    background:white;
+    border-radius:55%;
+    padding:1px;
+    margin-bottom:5px;
 }
 
 /* CONTAINER */
@@ -34,6 +42,13 @@ header{
     border-radius:10px;
     box-shadow:0 4px 10px rgba(0,0,0,0.15);
     margin-bottom:20px;
+}
+
+/* LOGIN WATERMARK */
+.login-card{
+    background:
+      linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)),
+      url("college.jpg") center/cover no-repeat;
 }
 
 .hidden{display:none}
@@ -56,11 +71,13 @@ button{
     border:none;
     border-radius:5px;
     cursor:pointer;
-    margin-top:10px;
+    margin-top:12px;
 }
 button:hover{background:#0055aa}
 
-.logout{background:#b30000}
+.logout{
+    background:#b30000;
+}
 .logout:hover{background:#e60000}
 
 /* TABLE */
@@ -77,10 +94,9 @@ th,td{
 }
 th{background:#e8eef6}
 
-/* RADIO RATING - FIXED ALIGNMENT */
+/* RADIO RATINGS */
 .rating-group{
     display:flex;
-    align-items:center;
     gap:25px;
     margin-top:8px;
 }
@@ -89,7 +105,6 @@ th{background:#e8eef6}
     align-items:center;
     gap:5px;
     font-weight:normal;
-    cursor:pointer;
 }
 
 /* PRINT */
@@ -111,16 +126,17 @@ th{background:#e8eef6}
 <body>
 
 <header>
+<img src="logo.png" alt="College Logo">
 <h2>Rajendra Mane Polytechnic, Ambav</h2>
 <h3>Department of Computer Engineering</h3>
-<p>Academic Year 2025–26</p>
+<p>Academic Year 2025 &#45; 26</p>
 </header>
 
 <div class="container">
 
 <!-- LOGIN -->
-<div id="loginBox" class="card">
-<h3>Login</h3>
+<div id="loginBox" class="card login-card">
+<h3 style="text-align:center">Login</h3>
 
 <label>Role</label>
 <select id="role">
@@ -172,7 +188,10 @@ th{background:#e8eef6}
 
 <!-- REPORT -->
 <div class="card" id="printSection">
+<h2 style="text-align:center">Rajendra Mane Polytechnic, Ambav</h2>
+<h3 style="text-align:center">Department of Computer Engineering</h3>
 <h3 style="text-align:center">Faculty Feedback Report</h3>
+<h5 style="text-align:center">Academic Year 2025 &#45; 26</h5>
 <table id="reportTable"></table>
 </div>
 
@@ -222,7 +241,6 @@ const parameters = [
  {key:"p5",label:"Overall Performance"}
 ];
 
-/* LOGIN */
 function login(){
 if(role.value==="admin" && user.value==="admin" && pass.value==="admin123"){
 loginBox.classList.add("hidden");
@@ -243,7 +261,6 @@ else alert("Invalid Login");
 
 function logout(){location.reload();}
 
-/* ADMIN */
 function addStudent(){
 students.push({enroll:sEnroll.value,name:sName.value,year:sYear.value});
 localStorage.setItem("students",JSON.stringify(students));
@@ -264,7 +281,6 @@ localStorage.setItem("faculties",JSON.stringify(faculties));
 alert("Faculty Added");
 }
 
-/* STUDENT */
 function loadFaculties(){
 facultySelect.innerHTML="";
 let list = faculties.filter(f=>f.year===loggedStudent.year);
@@ -280,17 +296,12 @@ faculties.filter(f=>f.faculty===facultySelect.value && f.year===loggedStudent.ye
 .forEach(s=>subjectSelect.innerHTML+=`<option>${s.subject}</option>`);
 }
 
-/* ? ALIGNED RADIO BUTTONS ? */
 function createRatingUI(){
 ratingsArea.innerHTML="";
 parameters.forEach(p=>{
-let html=`<label>${p.label}</label>
-<div class="rating-group">`;
+let html=`<label>${p.label}</label><div class="rating-group">`;
 for(let i=1;i<=5;i++){
-html+=`
-<label>
-<input type="radio" name="${p.key}" value="${i}"> ${i}
-</label>`;
+html+=`<label><input type="radio" name="${p.key}" value="${i}"> ${i}</label>`;
 }
 html+=`</div>`;
 ratingsArea.innerHTML+=html;
@@ -301,7 +312,7 @@ function submitFeedback(){
 let record={faculty:facultySelect.value,subject:subjectSelect.value};
 for(let p of parameters){
 let r=document.querySelector(`input[name="${p.key}"]:checked`);
-if(!r){alert("Please give rating for all parameters");return;}
+if(!r){alert("Please rate all parameters");return;}
 record[p.key]=Number(r.value);
 }
 feedbackData.push(record);
@@ -309,7 +320,6 @@ localStorage.setItem("feedbackData",JSON.stringify(feedbackData));
 alert("Feedback Submitted Successfully");
 }
 
-/* REPORT */
 function generateReport(){
 reportTable.innerHTML="<tr><th>Faculty</th><th>Subject</th>"+
 parameters.map(p=>`<th>${p.label}</th>`).join("")+
