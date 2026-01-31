@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RMP Student Feedback System</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+    font-family:Segoe UI, Arial;
+    background:#f2f5f9;
+    margin:0;
+}
+
+/* HEADER */
+header{
+    background:#003366;
+    color:white;
+    padding:15px;
+    text-align:center;
+}
+
+/* CONTAINER */
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:20px;
+}
+
+/* CARD */
+.card{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+    margin-bottom:20px;
+}
+
+.hidden{display:none}
+
+label{
+    font-weight:600;
+    display:block;
+    margin-top:12px;
+}
+
+input,select,button{
+    width:100%;
+    padding:8px;
+    margin-top:5px;
+}
+
+button{
+    background:#003366;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    margin-top:10px;
+}
+button:hover{background:#0055aa}
+
+.logout{background:#b30000}
+.logout:hover{background:#e60000}
+
+/* TABLE */
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+    font-size:13px;
+}
+th,td{
+    border:1px solid #999;
+    padding:6px;
+    text-align:center;
+}
+th{background:#e8eef6}
+
+/* RADIO RATING - FIXED ALIGNMENT */
+.rating-group{
+    display:flex;
+    align-items:center;
+    gap:25px;
+    margin-top:8px;
+}
+.rating-group label{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-weight:normal;
+    cursor:pointer;
+}
+
+/* PRINT */
+@media print{
+    body *{visibility:hidden}
+    #printSection, #printSection *{visibility:visible}
+    #printSection{
+        position:absolute;
+        top:0;
+        left:0;
+        width:100%;
+        padding:10px;
+    }
+    table{font-size:11px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>Rajendra Mane Polytechnic, Ambav</h2>
+<h3>Department of Computer Engineering</h3>
+<p>Academic Year 2025–26</p>
+</header>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="loginBox" class="card">
+<h3>Login</h3>
+
+<label>Role</label>
+<select id="role">
+<option value="admin">Admin</option>
+<option value="student">Student</option>
+</select>
+
+<label>Username / Enrollment</label>
+<input id="user">
+
+<label>Password</label>
+<input id="pass" type="password">
+
+<button onclick="login()">Login</button>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="hidden">
+
+<div class="card">
+<h3>Admin Panel</h3>
+
+<h4>Add Student</h4>
+<input id="sEnroll" placeholder="Enrollment">
+<input id="sName" placeholder="Student Name">
+<select id="sYear">
+<option>FY</option><option>SY</option><option>TY</option>
+</select>
+<button onclick="addStudent()">Add Student</button>
+
+<h4>Student List</h4>
+<select id="viewYear" onchange="showStudents()">
+<option>FY</option><option>SY</option><option>TY</option>
+</select>
+<table id="studentTable"></table>
+
+<hr>
+
+<h4>Add Faculty & Subject</h4>
+<input id="facName" placeholder="Faculty Name">
+<input id="subName" placeholder="Subject Name">
+<select id="subYear">
+<option>FY</option><option>SY</option><option>TY</option>
+</select>
+<button onclick="addFaculty()">Add Faculty</button>
+
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<!-- REPORT -->
+<div class="card" id="printSection">
+<h3 style="text-align:center">Faculty Feedback Report</h3>
+<table id="reportTable"></table>
+</div>
+
+<div class="card">
+<button onclick="generateReport()">Generate Report</button>
+<button onclick="exportExcel()">Export Excel</button>
+<button onclick="window.print()">Print</button>
+</div>
+
+</div>
+
+<!-- STUDENT PANEL -->
+<div id="studentPanel" class="hidden">
+
+<div class="card">
+<h3>Student Feedback Form</h3>
+
+<p><b>Rating Scale:</b>  
+1 = Poor | 2 = Fair | 3 = Good | 4 = Very Good | 5 = Excellent</p>
+
+<label>Faculty</label>
+<select id="facultySelect" onchange="loadSubjects()"></select>
+
+<label>Subject</label>
+<select id="subjectSelect"></select>
+
+<div id="ratingsArea"></div>
+
+<button onclick="submitFeedback()">Submit Feedback</button>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+
+</div>
+</div>
+
+<script>
+let students = JSON.parse(localStorage.getItem("students") || "[]");
+let faculties = JSON.parse(localStorage.getItem("faculties") || "[]");
+let feedbackData = JSON.parse(localStorage.getItem("feedbackData") || "[]");
+let loggedStudent = null;
+
+const parameters = [
+ {key:"p1",label:"Punctuality"},
+ {key:"p2",label:"Knowledge"},
+ {key:"p3",label:"Presentation"},
+ {key:"p4",label:"Ability to Resolve Doubts"},
+ {key:"p5",label:"Overall Performance"}
+];
+
+/* LOGIN */
+function login(){
+if(role.value==="admin" && user.value==="admin" && pass.value==="admin123"){
+loginBox.classList.add("hidden");
+adminPanel.classList.remove("hidden");
+showStudents();
+}
+else if(role.value==="student"){
+let s = students.find(x=>x.enroll===user.value && pass.value==="student123");
+if(!s){alert("Invalid Student Login");return;}
+loggedStudent=s;
+loginBox.classList.add("hidden");
+studentPanel.classList.remove("hidden");
+loadFaculties();
+createRatingUI();
+}
+else alert("Invalid Login");
+}
+
+function logout(){location.reload();}
+
+/* ADMIN */
+function addStudent(){
+students.push({enroll:sEnroll.value,name:sName.value,year:sYear.value});
+localStorage.setItem("students",JSON.stringify(students));
+alert("Student Added");
+}
+
+function showStudents(){
+studentTable.innerHTML="<tr><th>Enrollment</th><th>Name</th><th>Year</th></tr>";
+students.filter(s=>s.year===viewYear.value)
+.forEach(s=>{
+studentTable.innerHTML+=`<tr><td>${s.enroll}</td><td>${s.name}</td><td>${s.year}</td></tr>`;
+});
+}
+
+function addFaculty(){
+faculties.push({faculty:facName.value,subject:subName.value,year:subYear.value});
+localStorage.setItem("faculties",JSON.stringify(faculties));
+alert("Faculty Added");
+}
+
+/* STUDENT */
+function loadFaculties(){
+facultySelect.innerHTML="";
+let list = faculties.filter(f=>f.year===loggedStudent.year);
+[...new Set(list.map(x=>x.faculty))].forEach(f=>{
+facultySelect.innerHTML+=`<option>${f}</option>`;
+});
+loadSubjects();
+}
+
+function loadSubjects(){
+subjectSelect.innerHTML="";
+faculties.filter(f=>f.faculty===facultySelect.value && f.year===loggedStudent.year)
+.forEach(s=>subjectSelect.innerHTML+=`<option>${s.subject}</option>`);
+}
+
+/* ? ALIGNED RADIO BUTTONS ? */
+function createRatingUI(){
+ratingsArea.innerHTML="";
+parameters.forEach(p=>{
+let html=`<label>${p.label}</label>
+<div class="rating-group">`;
+for(let i=1;i<=5;i++){
+html+=`
+<label>
+<input type="radio" name="${p.key}" value="${i}"> ${i}
+</label>`;
+}
+html+=`</div>`;
+ratingsArea.innerHTML+=html;
+});
+}
+
+function submitFeedback(){
+let record={faculty:facultySelect.value,subject:subjectSelect.value};
+for(let p of parameters){
+let r=document.querySelector(`input[name="${p.key}"]:checked`);
+if(!r){alert("Please give rating for all parameters");return;}
+record[p.key]=Number(r.value);
+}
+feedbackData.push(record);
+localStorage.setItem("feedbackData",JSON.stringify(feedbackData));
+alert("Feedback Submitted Successfully");
+}
+
+/* REPORT */
+function generateReport(){
+reportTable.innerHTML="<tr><th>Faculty</th><th>Subject</th>"+
+parameters.map(p=>`<th>${p.label}</th>`).join("")+
+"<th>Final Avg</th></tr>";
+
+let map={};
+feedbackData.forEach(f=>{
+let k=f.faculty+"_"+f.subject;
+if(!map[k]){
+map[k]={faculty:f.faculty,subject:f.subject,count:0,sum:{}};
+parameters.forEach(p=>map[k].sum[p.key]=0);
+}
+parameters.forEach(p=>map[k].sum[p.key]+=f[p.key]);
+map[k].count++;
+});
+
+for(let k in map){
+let m=map[k],final=0,row="";
+parameters.forEach(p=>{
+let a=(m.sum[p.key]/m.count).toFixed(2);
+final+=+a;
+row+=`<td>${a}</td>`;
+});
+reportTable.innerHTML+=`<tr>
+<td>${m.faculty}</td><td>${m.subject}</td>${row}
+<td>${(final/5).toFixed(2)}</td></tr>`;
+}
+}
+
+function exportExcel(){
+let csv="Faculty,Subject,"+parameters.map(p=>p.label).join(",")+",Final Avg\n";
+document.querySelectorAll("#reportTable tr").forEach((r,i)=>{
+if(i===0)return;
+csv+=[...r.children].map(td=>td.innerText).join(",")+"\n";
+});
+let a=document.createElement("a");
+a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+a.download="Faculty_Feedback_Report.csv";
+a.click();
+}
+</script>
+
+</body>
+</html>
